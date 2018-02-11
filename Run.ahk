@@ -6,11 +6,25 @@ MultipleFileArray := []
 SingleIsDisabled := false
 MultipleIsDisabled := false
 
+;Sort
+Gui, Add, CheckBox, x5 y2 w16 h16 vMultipleSortCheck,
+Gui, Add, Text, x24 y3 w480 h20 +BackgroundTrans, Sort
+;Remove files
+Gui, Add, CheckBox, x395 y2 w16 h16 vRemoveCheck,
+Gui, Add, Text, x414 y3 w480 h20 +BackgroundTrans, Remove files
+;Multiple
+Gui, Add, Text, x0 y3 w480 h20 +Center +BackgroundTrans, Multiple merge/remove duplicates
 Gui, Add, ListView, x0 y20 w480 h140 gFileListView, Name|Lines|Path
 Gui, Add, Button, x0 y160 w480 h40 vMergeBtn gMerge, Merge
-Gui, Add, Text, x0 y2 w480 h20 +Center +BackgroundTrans, Multiple files merge (remove duplicates)
+;Sort
+Gui, Add, CheckBox, x5 y203 w16 h16 vSingleSortCheck,
+Gui, Add, Text, x24 y203 w480 h20 +BackgroundTrans, Sort
+;Save ScriptDir
+Gui, Add, CheckBox, x385 y203 w16 h16 vSaveSDCheck,
+Gui, Add, Text, x404 y203 w480 h20 +BackgroundTrans, Save ScriptDir
+;Single
+Gui, Add, Text, x0 y203 w480 h20 +Center +BackgroundTrans, Single remove duplicates
 Gui, Add, ListBox, x0 y220 w480 h110, 
-Gui, Add, Text, x0 y202 w480 h20 +Center +BackgroundTrans, Single file remove duplicates (fast)
 
 LV_ModifyCol(1, 140)
 LV_ModifyCol(2, 60)
@@ -47,6 +61,9 @@ if (ListCount = 0)
 FileSelectFile, SaveFilePath, S8, , Save a file, Text Documents (*.txt)
 if SaveFilePath !=
 {
+    GuiControlGet, MultipleSortCheck
+    GuiControlGet, RemoveCheck
+    
     MultipleIsDisabled := true
     GuiControl, Disable, MergeBtn,
     ComboArray := []
@@ -56,13 +73,20 @@ if SaveFilePath !=
         {
            ComboArray.Push(A_LoopReadLine)
         }
+        if (RemoveCheck)
+        {
+            FileDelete, %element%
+        }
     }
     removedComboArray := trimArray(ComboArray)
     for index, element in removedComboArray
     {
         ComboText = %ComboText%%element%`n
     }
-    Sort, ComboText
+    if (MultipleSortCheck)
+    {
+        Sort, ComboText
+    }
     FileAppend, %ComboText%, %SaveFilePath%.txt
     ComboText = 
     GuiControl, Enabled, MergeBtn, 
@@ -97,6 +121,8 @@ if (x > 0 && y > 220 && x < 480 && y < 330)
         SingleIsDisabled := true
         Loop, Parse, A_GuiEvent, `n
         {
+            GuiControlGet, SingleSortCheck
+            GuiControlGet, SaveSDCheck
             SingleComboArray := []
             Loop, Read, %A_LoopField%
             {
@@ -109,8 +135,18 @@ if (x > 0 && y > 220 && x < 480 && y < 330)
             {
                 SingleComboText = %SingleComboText%%element%`n
             }
-            Sort, SingleComboText
-            FileAppend, %SingleComboText%, %A_LoopField%
+            if (SingleSortCheck)
+            {
+                Sort, SingleComboText
+            }
+            FileLocation := A_LoopField
+            if (SaveSDCheck)
+            {
+                SplitPath, A_LoopField, FileName
+                FileLocation = %A_ScriptDir%/%FileName%
+                FileDelete, %A_LoopField%
+            }
+            FileAppend, %SingleComboText%, %FileLocation%
             SingleComboText = 
             SingleIsDisabled := false
         }
