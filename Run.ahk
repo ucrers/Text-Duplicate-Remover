@@ -103,14 +103,31 @@ if (x > 0 && y > 20 && x < 480 && y < 160)
     ;Multiple files
     Loop, Parse, A_GuiEvent, `n
     {
-        MultipleFileArray.Push(A_LoopField)
-        total_lines = 0
-        Loop, Read, %A_LoopField%
+        if (InStr(A_LoopField, ".txt"))
         {
-           total_lines = %A_Index%
+            MultipleFileArray.Push(A_LoopField)
+            total_lines = 0
+            Loop, Read, %A_LoopField%
+            {
+               total_lines = %A_Index%
+            }
+            SplitPath, A_LoopField, FileName
+            LV_Add("", FileName, total_lines, A_LoopField)
         }
-        SplitPath, A_LoopField, FileName
-        LV_Add("", FileName, total_lines, A_LoopField)
+        else
+        {
+            Loop Files, %A_LoopField%\*.txt, R
+            {
+                MultipleFileArray.Push(A_LoopFileFullPath)
+                total_lines = 0
+                Loop, Read, %A_LoopFileFullPath%
+                {
+                    total_lines = %A_Index%
+                }
+                SplitPath, A_LoopFileFullPath, FileName
+                LV_Add("", FileName, total_lines, A_LoopFileFullPath)
+            }
+        }
     }
 }
 if (x > 0 && y > 220 && x < 480 && y < 330)
